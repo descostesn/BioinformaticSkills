@@ -22,4 +22,4 @@ I am making use of R and Bioconductor extensively. All my scripts are structured
   3. A functions section
   4. A main section
 
-<p style='text-align: justify;'> To process data in batch, I am usually building '.conf' files containing all parameters separated by semicolons (see [code generation repository]()). To feed script with parameters, I am using perl scripts that call R script through the `system(Rscript path*.R)` command.</p>
+<p style='text-align: justify; text-justify: inter-word;'> To process data in batch, I am usually building '.conf' files containing all parameters separated by semicolons (see [code generation repository]()). To feed script with parameters, I am using perl scripts that call R script through the `system(Rscript path*.R)` command.</p>
