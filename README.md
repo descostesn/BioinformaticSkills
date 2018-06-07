@@ -34,12 +34,14 @@ To process data in batch, I am usually building '.conf' files containing all par
 
 Click on the process that you are interested in to see the code:
 
-  1. Demultiplexing: with [BB](), [Illumina primers](), [VLB]()
-  2. QC control and filtering:
+  1. Demultiplexing and trimming: with [BB](), [Illumina primers](), [VLB](), [cutadapt]()
+  2. QC control and filtering: [fastqc](), [NGSQCToolkit](), 
   3. Alignment: [Bowtie](), [Bowtie2](), [STAR](), [Tophat]()
-  4. Bam operations:
+  4. Bam operations: [ALL](), [bamutils](), [samtools](), [picardtools]() 
   5. Pasha Pipeline (published in Bioinformatics journal: [here]())
-
+  6. Format conversion: [sratoolkit]()
+  7. **** ChipSeqSpike development ****
+  
 ## Java interface for Biologists
 
 [Genomic Box]()
