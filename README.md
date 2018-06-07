@@ -40,9 +40,13 @@ To process data in batch, I am usually building '.conf' files containing all par
   4. Alignment: [Bowtie](), [Bowtie2](), [STAR](), [Tophat]()
   5. Bam operations: [ALL](), [bamutils](), [samtools](), [picardtools]() 
   6. Pasha Pipeline (published in Bioinformatics journal: [here]())
-  7. Format conversion: [sratoolkit]()
-  
-  
+  7. Format conversion (not exhaustive): [sratoolkit](), [bedtools](), [samtools](), [bedops](), [bed2GFF](), [wigVar2Fix]()
+  8. Visualization: [Boxplots](),[UCSC tracks]()
+  9. Interval operations: [Centering]()
+  10. Clustering: [seqplots](), [deeptools]()
+  11. Differential binding: [diffbind](), [macs2diff](), [MAnorm]()
+  12. Gene Ontologies: [chipEnrich](), [clusterProfiler](), [Gage]()
+
 ## Java interface for Biologists
 
 [Genomic Box]()
