@@ -1,0 +1,666 @@
+####################
+# This script aims at preparing counts table which is the input of DEseq2 package.
+# Nicolas Descostes october 2015
+####################
+
+library("Rsamtools");
+library("GenomicAlignments");
+library("BiocParallel");
+library("GenomicFeatures");
+library("DESeq2");
+library("vsn");
+library("pheatmap");
+library("RColorBrewer");
+library("sva");
+library("Rargs");
+library("Rsubread");
+library("ggplot2");
+
+
+################
+# PARAMETERS
+################
+
+
+# Define the required options
+paramsDefinition=list();
+
+paramsDefinition[["--bamFilesVec"]]=list(variableName="bam_files_vec", numeric=F, mandatory=T, description="A space separated list of bam files to compare.");
+paramsDefinition[["--nbCPU"]]=list(variableName="nb_cpu", numeric=T, mandatory=T, description="Number of cpu to use.");
+paramsDefinition[["--singleEnd"]]=list(variableName="single_end", numeric=F, mandatory=T, description="Boolean indicating if the data are single or paired ended.", postConversion=as.logical);
+paramsDefinition[["--samplesInfoFile"]]=list(variableName="samples_info_file", numeric=F, mandatory=T, description=" !!!!!!!! SHOULD BE IN THE SAME ORDER THAN THE BAM FILES!!!!!!! path to the file containing information about samples. Format: Sample name,cell,condition,avglength,experiment,sample,biosample");
+paramsDefinition[["--nameOfReference"]]=list(variableName="name_of_reference", numeric=F, mandatory=T, description="Name of the reference condition.");
+paramsDefinition[["--outputFolder"]]=list(variableName="output_folder", numeric=F, mandatory=T, description="Path to the output folder.");
+paramsDefinition[["--comparisonName"]]=list(variableName="comparison_name", numeric=F, mandatory=T, description="Name of the analysis.");
+paramsDefinition[["--refseqAnno"]]=list(variableName="refseq_anno", numeric=F, mandatory=T, description="File path of the file containing annotations. This should be in gtf format");
+paramsDefinition[["--expnamesVec"]]=list(variableName="expnames_vec", numeric=F, mandatory=T, description="A space separated vector of exp names corresponding to the bam files. !! Should have the same names than in sampleInfoFile !!!");
+paramsDefinition[["--outputFormat"]]=list(variableName="output_format", numeric=F, mandatory=T, description="Format of output files can be png or pdf.");
+
+#Optional
+paramsDefinition[["--singleGeneToHighlight"]]=list(variableName="single_gene_to_highlight", numeric=F, mandatory=F, description="Name of gene to highlight in the plot.", default=NA);
+paramsDefinition[["--labelsSingleGene"]]=list(variableName="labels_single_gene", numeric=F, mandatory=F, description="Name of the label on the plot for the gene to highlight.", default=NA);
+paramsDefinition[["--nbSurrogateVariable"]]=list(variableName="nb_surrogate_variable", numeric=T, mandatory=F, description="Number of surrogate variable to use for estimating batch effect.", default=2);
+paramsDefinition[["--performBatchCorrection"]]=list(variableName="performBatchCorrection", numeric=F, mandatory=F, description="Boolean indicating if the batch correction should be performed.", postConversion=as.logical, default=TRUE);
+
+################
+
+
+
+################
+# FUNCTION
+################
+
+heatmapDistance <- function(object, output_folder, filename, output_format)
+{
+	sampleDists <- dist(t(assay(object)));
+	sampleDistMatrix <- as.matrix(sampleDists);
+	rownames(sampleDistMatrix) <- object$Sample.name;
+	colnames(sampleDistMatrix) <- object$Sample.name;
+	colors <- colorRampPalette( rev(brewer.pal(9, "Blues")) )(255);
+	
+ if(output_format == "png"){
+     png(filename=paste(output_folder, filename,sep=""), width = 600, height = 600, bg = "transparent");
+ }else{
+     pdf(file=paste(output_folder, filename,sep=""), width=10, height=10)
+ }
+	
+	pheatmap(sampleDistMatrix, clustering_distance_rows=sampleDists, clustering_distance_cols=sampleDists, col=colors);
+	dev.off();
+}
+
+
+checking_outputFolder <- function(output_path)
+{
+	if(!file.exists(output_path))
+	{
+		dir.create(output_path, recursive = TRUE)
+	}
+}
+
+
+
+qualityAssessment_and_filtering <- function(DESeqDataSet, outputFolder, notAllZero, output_format)
+{
+	cat("\t Applying two different normalization strategies\n");
+	rld <- rlog(DESeqDataSet); #Regularized log
+	vsd <- varianceStabilizingTransformation(DESeqDataSet); #Variance stabilizing transformation, do not use if the differences are due to the experimental conditions
+	
+	cat("\t Plotting the effect of the different normalization on the variance\n");
+ if(output_format == "png"){
+     png(filename=paste(outputFolder, "effect_on_variance_log.png",sep=""), width = 600, height = 600, bg = "transparent");     
+ }else{
+     pdf(file=paste(outputFolder, "effect_on_variance_log.pdf",sep=""), width=10, height=10)
+ }
+	meanSdPlot(log2(counts(DESeqDataSet,normalized=TRUE)[notAllZero,] + 1), xlab = "log2(mean > 0 + 1)");
+	dev.off();
+	
+ if(output_format == "png"){
+     png(filename=paste(outputFolder, "effect_on_variance_rlog.png",sep=""), width = 600, height = 600, bg = "transparent");
+ }else{
+     pdf(file=paste(outputFolder, "effect_on_variance_rlog.pdf",sep=""), width=10, height=10)
+ }
+	meanSdPlot(assay(rld[notAllZero,]), xlab = "Regularized log");
+	dev.off();
+	
+ if(output_format == "png"){
+     png(filename=paste(outputFolder, "effect_on_variance_vst.png",sep=""), width = 600, height = 600, bg = "transparent");
+ }else{
+     pdf(file=paste(outputFolder, "effect_on_variance_vst.pdf",sep=""), width=10, height=10)
+ }
+	
+	meanSdPlot(assay(vsd[notAllZero,]), xlab = "Variance stabilizing transformation");
+	dev.off();
+		
+	cat("\t Creating heatmap of the count matrix\n");
+	select <- order(rowMeans(counts(DESeqDataSet,normalized=TRUE)),decreasing=TRUE)[1:20]; # normalized = divide the counts by the size factors or normalization factors before returning
+	nt <- normTransform(DESeqDataSet); # defaults to log2(x+1)
+	log2.norm.counts <- assay(nt)[select,];
+	
+ if(output_format == "png"){
+     png(filename=paste(outputFolder, "heatmap_count_matrix_pseudo.png",sep=""), width = 600, height = 600, bg = "transparent");
+ }else{
+     pdf(file=paste(outputFolder, "heatmap_count_matrix_pseudo.pdf",sep=""), width=10, height=10)
+ }
+	pheatmap(log2.norm.counts, cluster_rows=FALSE, show_rownames=TRUE, cluster_cols=FALSE, main="log2 + 1");
+	dev.off();
+	
+ if(output_format == "png"){
+     png(filename=paste(outputFolder, "heatmap_count_matrix_rld.png",sep=""), width = 600, height = 600, bg = "transparent");
+ }else{
+     pdf(file=paste(outputFolder, "heatmap_count_matrix_rld.pdf",sep=""), width=10, height=10)
+ }
+	pheatmap(assay(rld)[select,], cluster_rows=FALSE, show_rownames=TRUE, cluster_cols=FALSE, main = "rld");
+	dev.off();
+	
+ if (output_format == "png"){
+     png(filename=paste(outputFolder, "heatmap_count_matrix_vsd.png",sep=""), width = 600, height = 600, bg = "transparent");
+ }else{
+     pdf(file=paste(outputFolder, "heatmap_count_matrix_vsd.pdf",sep=""), width=10, height=10)
+ }
+	pheatmap(assay(vsd)[select,], cluster_rows=FALSE, show_rownames=TRUE, cluster_cols=FALSE, main="vsd");
+	dev.off();
+	
+	cat("\t Creating heatmaps of the sample to sample euclidean distance\n");
+	heatmapDistance(nt, outputFolder, if(output_format == "png") "heatmap_distance_pseudocounts.png" else "heatmap_distance_pseudocounts.pdf", output_format);
+	heatmapDistance(rld, outputFolder, if(output_format == "png") "heatmap_distance_rld.png" else "heatmap_distance_rld.pdf", output_format);
+	heatmapDistance(vsd, outputFolder, if(output_format == "png") "heatmap_distance_vsd.png" else "heatmap_distance_vsd.pdf", output_format);
+	
+	cat("\t Plotting the PCA of the sample distance");
+ if(output_format == "png"){
+     png(filename=paste(outputFolder, "PCA_pseudo_deseq.png",sep=""), width = 600, height = 600, bg = "transparent");
+ }else{
+     pdf(file=paste(outputFolder, "PCA_pseudo_deseq.pdf",sep=""), width=10, height=10)
+ }
+	tmp <- plotPCA(nt);
+	print(tmp);
+	dev.off();
+	rm(tmp);
+ if(output_format == "png"){
+     png(filename=paste(outputFolder, "PCA_rld_deseq.png",sep=""), width = 600, height = 600, bg = "transparent");
+ }else{
+     pdf(file=paste(outputFolder, "PCA_rld_deseq.pdf",sep=""), width=10, height=10)
+ }
+	tmp <- plotPCA(rld);
+	print(tmp);
+	dev.off();
+	rm(tmp);
+ if(output_format == "png"){
+     png(filename=paste(outputFolder, "PCA_vsd_deseq.png",sep=""), width = 600, height = 600, bg = "transparent");
+ }else{
+     pdf(file=paste(outputFolder, "PCA_vsd_deseq.pdf",sep=""), width=10, height=10)
+ }
+	tmp <- plotPCA(vsd);
+	print(tmp);
+	dev.off();
+	rm(tmp);
+	
+	# Plot PCA with ggplot
+	
+	d = plotPCA(rld, returnData=TRUE);
+	ggplot(d, aes(x=PC1,y=PC2,col=condition,label=name)) + geom_point() + geom_text(aes(y = PC2 + 0.5), position = position_dodge(0.9), vjust = 0.3, hjust=0.7, angle=45);
+	ggsave(if(output_format == "png") "PCA_rld_ggplot.png" else "PCA_rld_ggplot.pdf", plot = last_plot(), device = if(output_format == "png") "png" else "pdf", path = outputFolder);
+	rm(d);
+	
+	d = plotPCA(nt, returnData=TRUE);
+	ggplot(d, aes(x=PC1,y=PC2,col=condition,label=name)) + geom_point() + geom_text(aes(y = PC2 + 0.5), position = position_dodge(0.9), vjust = 0.3, hjust=0.7, angle=45);
+	ggsave(if(output_format == "png") "PCA_pseudo_ggplot.png" else "PCA_pseudo_ggplot.pdf", plot = last_plot(), device =if(output_format == "png") "png" else "pdf", path = outputFolder);
+	rm(d);
+	
+	d = plotPCA(vsd, returnData=TRUE);
+	ggplot(d, aes(x=PC1,y=PC2,col=condition,label=name)) + geom_point() + geom_text(aes(y = PC2 + 0.5), position = position_dodge(0.9), vjust = 0.3, hjust=0.7, angle=45);
+	ggsave(if(output_format == "png") "PCA_vsd_ggplot.png" else "PCA_vsd_ggplot.pdf", plot = last_plot(), device =if(output_format == "png") "png" else "pdf", path = outputFolder);
+	rm(d);
+}
+
+
+
+barplot_and_writeTables <- function(outputFolder, title_barplot, upregulated, downregulated, DESeqResults, title_firstable, title_secondtable, title_thirdtable, output_format)
+{
+    if(output_format == "png"){
+        png(filename=paste(outputFolder, title_barplot,sep=""), width = 600, height = 600, bg = "transparent");
+    }else{
+        pdf(file=paste(outputFolder, title_barplot,sep=""), width=10, height=10)
+    }
+	barplot(c(nrow(upregulated),nrow(downregulated)), names.arg=c(paste("upregulated: ", nrow(upregulated), sep=""), paste("downregulated: ", nrow(downregulated),sep="")));
+	dev.off();
+	
+	cat("\t Writing the tables of the differential analysis to ", outputFolder, "\n");
+	write.table(DESeqResults, file= paste(outputFolder, title_firstable, sep=""), sep="\t", quote=FALSE, row.names=TRUE, col.names=TRUE);
+	write.table(downregulated, file= paste(outputFolder, title_secondtable, sep=""), sep="\t", quote=FALSE, row.names=TRUE, col.names=TRUE);
+	write.table(upregulated, file= paste(outputFolder, title_thirdtable, sep=""), sep="\t", quote=FALSE, row.names=TRUE, col.names=TRUE);
+}
+
+
+
+
+writing_differential_tables <- function(DESeqDataSet, outputFolder, output_format)
+{
+	# Filtering rows having a basemean at 0 and then, having a p-value equal to NA
+	result_diff <- results(DESeqDataSet);
+	result_diff <- result_diff[which(result_diff[,1] != 0),];
+	result_diff <- result_diff[which(!is.na(result_diff$padj)),];
+	
+	write.table(result_diff, file=paste(outputFolder, "all-genes-diff.txt", sep=""), sep="\t", quote=FALSE, row.names=TRUE, col.names=TRUE);
+	
+	cat("\t Ordering by p-values\n");
+	result_diff_Ordered <- result_diff[order(result_diff$padj),];
+	
+	cat("\t Here is a summary of the differential analysis\n");
+	summary(result_diff_Ordered, alpha=0.05);
+	
+	number_pvalues_inf <- sum(result_diff_Ordered$padj <= 0.05, na.rm=TRUE);
+	number_total_row <- nrow(result_diff_Ordered);
+	number_up_twoFold_pval <- sum(result_diff$log2FoldChange >= 1 & result_diff$padj <= 0.05, na.rm=TRUE);
+	number_down_twoFold_pval <- sum(result_diff$log2FoldChange <= -1 & result_diff$padj <= 0.05, na.rm=TRUE);
+	
+	cat("\t Number of p-values < 0.05: ", number_pvalues_inf, "/", number_total_row, " (", round((number_pvalues_inf*100)/number_total_row), " %) of the rows\n");
+	cat("\t Number of p-values < 0.05 and upregulated by at least 2 folds: ", number_up_twoFold_pval, "/", number_total_row, " (", round((number_up_twoFold_pval*100)/number_total_row), " %) of the rows\n");
+	cat("\t Number of p-values < 0.05 and downregulated by at least 2 folds: ", number_down_twoFold_pval, "/", number_total_row, " (", round((number_down_twoFold_pval*100)/number_total_row), " %) of the rows\n");
+	
+	cat("\t Keeping only rows having a p-value < 0.05\n");
+	result_diff_Ordered_pvalfiltered <- result_diff_Ordered[which(result_diff_Ordered$padj <= 0.05),];
+	
+	up_regulated_nonZerofold <- result_diff_Ordered_pvalfiltered[which(result_diff_Ordered_pvalfiltered$log2FoldChange > 0), ];
+	down_regulated_nonZerofold <- result_diff_Ordered_pvalfiltered[which(result_diff_Ordered_pvalfiltered$log2FoldChange < 0), ];
+	
+	up_regulated_2fold <- result_diff_Ordered_pvalfiltered[which(result_diff_Ordered_pvalfiltered$log2FoldChange >= 1), ];
+	down_regulated_2fold <- result_diff_Ordered_pvalfiltered[which(result_diff_Ordered_pvalfiltered$log2FoldChange <= -1), ];
+	
+	barplot_and_writeTables(outputFolder, if(output_format == "png") "barplot_diff_nonzero.png" else "barplot_diff_nonzero.pdf", up_regulated_nonZerofold, down_regulated_nonZerofold, result_diff_Ordered_pvalfiltered, "down_and_up_regulated_significantPval_nonzerofold.txt", "downregulated_significantPval_nonzerofold.txt", "upregulated_significantPval_nonzero.txt", output_format);
+	barplot_and_writeTables(outputFolder, if(output_format == "png") "barplot_diff_2fold.png" else "barplot_diff_2fold.pdf", up_regulated_2fold, down_regulated_2fold, result_diff_Ordered_pvalfiltered, "down_and_up_regulated_significantPval_2fold.txt", "downregulated_significantPval_2fold.txt", "upregulated_significantPval_2fold.txt", output_format);
+	
+	
+	###########
+	########### 
+	# Keeping only 2fold with significant p-val to write the table of counts and performing a hierarchical clustering (with individual replicates, with mean and with median)
+	###########
+	###########
+	
+	cat("Writing rlog transformed counts and performing hierarchical clustering\n");
+	rld <- rlog(DESeqDataSet); #Regularized log, this normalization is important to do before clustering anything
+	write.table(assay(rld),file= paste(outputFolder, "rlog_counts_table_allgenes.txt", sep=""),quote=F,sep="\t");
+	rlog_counts_matrix <- assay(rld);
+	
+	signif_diff <- c(rownames(down_regulated_2fold),rownames(up_regulated_2fold));
+	index_to_keep <- match(signif_diff, rownames(rlog_counts_matrix));
+	
+	if(length(which(is.na(index_to_keep))) != 0)
+	{
+		stop("\n Problem in retrieving genes for making the hierarchical clustering\n\n");
+	}
+	
+	signif_rlog_matrix <- assay(rld)[index_to_keep,];
+	write.table(signif_rlog_matrix,file= paste(outputFolder, "signifPval_DownUP2fold_rlogCounts.txt", sep=""),quote=F,sep="\t");
+	
+	
+	if(!is.vector(signif_rlog_matrix) && (is.matrix(signif_rlog_matrix) && nrow(signif_rlog_matrix) != 0))  #If there are some differentially expressed genes, clustering will be performed on it
+	{
+		#Separating the control vs ko columns
+		index_WT_KO <- split(1:ncol(signif_rlog_matrix),colData(DESeqDataSet)$condition);
+		signif_rlog_matrix_WT <- signif_rlog_matrix[,index_WT_KO[[1]]];
+		signif_rlog_matrix_KO <- signif_rlog_matrix[,index_WT_KO[[2]]];
+		
+		
+		#####
+		# PART1: Considering each replicate
+		#####
+		
+		cat("\t Performing hierarchical clustering with each replicate\n");
+		
+		signif_rlog_matrix_norm <- signif_rlog_matrix - rowMeans(signif_rlog_matrix)
+		df <- as.data.frame(colData(rld)[,c("cell","condition")]);
+		outputFolder_clustering <- paste(outputFolder, "hierarchical_clustering/replicates/",sep="");
+		checking_outputFolder(outputFolder_clustering);
+		file_name_part1_base <- "hclust_replicates_sigPval2fold"
+		
+		for(nb_of_group_aggregate in c(seq(3, min(nrow(signif_rlog_matrix)-1,10),by=2),4,NA))
+		{
+			for(method_clustering in c("single", "complete", "average"))
+			{
+				file_name_part1 <- paste(file_name_part1_base, "_", nb_of_group_aggregate, "group_", method_clustering, sep="");
+				
+    if(output_format == "png"){
+        png(filename=paste(outputFolder_clustering, file_name_part1, ".png",sep=""), width = 600, height = 600, bg = "transparent");
+    }else{
+        pdf(file=paste(outputFolder_clustering, file_name_part1, ".pdf",sep=""), width=10, height=10)
+    }
+				result_clustering <- pheatmap(signif_rlog_matrix_norm, annotation_col=df, kmeans_k= nb_of_group_aggregate, clustering_method=method_clustering, cluster_cols = FALSE, treeheight_row=100, show_rownames= if(is.na(nb_of_group_aggregate)) FALSE else TRUE, main=paste(nb_of_group_aggregate, "group_", method_clustering,sep=""));
+				dev.off();
+				
+				if(!is.na(nb_of_group_aggregate))
+				{
+					group_list <- split(rownames(signif_rlog_matrix_norm),result_clustering[[3]]$cluster);
+					catch_result <- mapply(function(groups, names, outputfolder_arg){
+								
+								write(groups, file=paste(outputfolder_arg, names, "list.txt", sep=""), ncolumns=1);
+								
+							}, group_list, as.list(paste(file_name_part1,"_group", 1:nb_of_group_aggregate,sep="")), MoreArgs=list(outputFolder_clustering))
+				}
+				
+				write(result_clustering$tree_row$order, file= paste(outputFolder, file_name_part1, "-order.txt", sep=""), ncolumns=1);
+			}
+		}
+		
+		
+		#####
+		# PART2: Mean values
+		#####
+		
+		cat("\t Performing hierarchical clustering on mean\n");
+		signif_rlog_matrix_WT_mean <- rowMeans(signif_rlog_matrix_WT);
+		signif_rlog_matrix_KO_mean <- rowMeans(signif_rlog_matrix_KO);
+		signif_rlog_matrix_WT_KO_mean <- cbind(signif_rlog_matrix_WT_mean, signif_rlog_matrix_KO_mean);
+		signif_rlog_matrix_WT_KO_mean_norm <- signif_rlog_matrix_WT_KO_mean - rowMeans(signif_rlog_matrix_WT_KO_mean);
+		df_mean <- df[c(1,2),];
+		rownames(df_mean) <- colnames(signif_rlog_matrix_WT_KO_mean_norm);
+		
+		outputFolder_clustering <- paste(outputFolder, "hierarchical_clustering/by_row_mean/",sep="");
+		checking_outputFolder(outputFolder_clustering);
+		file_name_part2_base <- "hclust_mean_sigPval2fold"
+		
+		for(nb_of_group_aggregate in c(seq(3, min(nrow(signif_rlog_matrix)-1,10),by=2),NA))
+		{
+			for(method_clustering in c("single", "complete", "average"))
+			{
+				file_name_part2 <- paste(file_name_part2_base, "_", nb_of_group_aggregate, "group_", method_clustering, sep="");
+				
+    if(output_format == "png"){
+        png(filename=paste(outputFolder_clustering, file_name_part2, ".png",sep=""), width = 600, height = 600, bg = "transparent");
+    }else{
+        pdf(file=paste(outputFolder_clustering, file_name_part2, ".pdf",sep=""), width=10, height=10)
+    }
+				result_clustering <- pheatmap(signif_rlog_matrix_WT_KO_mean_norm, annotation_col=df_mean, kmeans_k = nb_of_group_aggregate, clustering_method=method_clustering, cluster_cols = FALSE, treeheight_row=100, show_rownames= if(is.na(nb_of_group_aggregate)) FALSE else TRUE, main=paste(nb_of_group_aggregate, "group_", method_clustering,sep=""));
+				dev.off();
+				
+				if(!is.na(nb_of_group_aggregate)) #Retrieving the list of annotations per group
+				{
+					group_list <- split(rownames(signif_rlog_matrix_WT_KO_mean_norm),result_clustering[[3]]$cluster);
+					catch_result <- mapply(function(groups, names, outputfolder_arg){
+								
+								write(groups, file=paste(outputfolder_arg, names, "list.txt", sep=""), ncolumns=1);
+								
+							}, group_list, as.list(paste(file_name_part2,"_group", 1:nb_of_group_aggregate,sep="")), MoreArgs=list(outputFolder_clustering))
+				}
+			}
+		}
+		
+		
+		
+		#####
+		# PART3: Median values
+		#####
+		
+		cat("\t Performing hierarchical clustering on median\n");
+		signif_rlog_matrix_WT_median <- rowMedians(signif_rlog_matrix_WT);
+		names(signif_rlog_matrix_WT_median) <- rownames(signif_rlog_matrix_WT);
+		signif_rlog_matrix_KO_median <- rowMedians(signif_rlog_matrix_KO);
+		names(signif_rlog_matrix_KO_median) <- rownames(signif_rlog_matrix_KO);
+		signif_rlog_matrix_WT_KO_median <- cbind(signif_rlog_matrix_WT_median, signif_rlog_matrix_KO_median);
+		signif_rlog_matrix_WT_KO_median_norm <- signif_rlog_matrix_WT_KO_median - rowMeans(signif_rlog_matrix_WT_KO_median);
+		df_median <- df[c(1,2),];
+		rownames(df_median) <- colnames(signif_rlog_matrix_WT_KO_median_norm);
+		
+		outputFolder_clustering <- paste(outputFolder, "hierarchical_clustering/by_row_median/",sep="");
+		checking_outputFolder(outputFolder_clustering);
+		file_name_part3_base <- "hclust_median_sigPval2fold"
+		
+		for(nb_of_group_aggregate in c(seq(3, min(nrow(signif_rlog_matrix)-1,10),by=2),NA))
+		{
+			for(method_clustering in c("single", "complete", "average"))
+			{
+				file_name_part3 <- paste(file_name_part3_base, "_", nb_of_group_aggregate, "group_", method_clustering, sep="");
+				
+    if(output_format == "png"){
+        png(filename=paste(outputFolder_clustering, file_name_part3, ".png",sep=""), width = 600, height = 600, bg = "transparent");
+    }else{
+        pdf(file=paste(outputFolder_clustering, file_name_part3, ".pdf",sep=""), width=10, height=10)
+    }
+				result_clustering <- pheatmap(signif_rlog_matrix_WT_KO_median_norm, annotation_col=df_median, kmeans_k= nb_of_group_aggregate, clustering_method=method_clustering, cluster_cols = FALSE, treeheight_row=100, show_rownames= if(is.na(nb_of_group_aggregate)) FALSE else TRUE, main=paste(nb_of_group_aggregate, "group_", method_clustering,sep=""));
+				dev.off();
+				
+				if(!is.na(nb_of_group_aggregate))
+				{
+					group_list <- split(rownames(signif_rlog_matrix_WT_KO_median_norm),result_clustering[[3]]$cluster);
+					catch_result <- mapply(function(groups, names, outputfolder_arg){
+								
+								write(groups, file=paste(outputfolder_arg, names, "list.txt", sep=""), ncolumns=1);
+								
+							}, group_list, as.list(paste(file_name_part3,"_group", 1:nb_of_group_aggregate,sep="")), MoreArgs=list(outputFolder_clustering))
+				}
+			}
+		}
+		
+	}
+		
+	return(result_diff);
+}
+
+
+
+differential_plots <- function(outputFolder, DESeqResults, comparisonName, singleGeneToHighlight, labelsSingleGene, DESeqDataSet, output_format)
+{
+	cat("\t Plotting a MA plot of the fold change, pval < 0.05 are highlighted in red\n");
+ if(output_format == "png"){
+     png(filename=paste(outputFolder, "differential_MAplot_significantPval.png",sep=""), width = 600, height = 600, bg = "transparent");
+ }else{
+     pdf(file=paste(outputFolder, "differential_MAplot_significantPval.pdf",sep=""), width=10, height=10)
+ }
+	plotMA(DESeqResults, main= comparisonName, alpha=0.05, ylim=c(-5, 5));
+	if(!is.na(singleGeneToHighlight))
+	{
+		with(DESeqResults[which(rownames(DESeqResults) == singleGeneToHighlight), ], {points(baseMean, log2FoldChange, col="blue", cex=1, lwd=2);text(baseMean, log2FoldChange, labels= labelsSingleGene, pos=4, col="blue");});
+	}
+	dev.off();
+	
+	cat("\t Plotting a MA plot of the fold change >= 2 and pval < 0.05 (highlighted in red)\n");
+	
+	df <- data.frame(mean = DESeqResults$baseMean, lfc = DESeqResults$log2FoldChange, isDE = ifelse(is.na(DESeqResults$padj), FALSE, DESeqResults$padj < 0.05 & abs(DESeqResults$log2) >= 1));
+	if(output_format == "png"){
+     png(filename=paste(outputFolder, "differential_MAplot_significantPval_2folds.png",sep=""), width = 600, height = 600, bg = "transparent");
+ }else{
+     pdf(file=paste(outputFolder, "differential_MAplot_significantPval_2folds.pdf",sep=""), width=10, height=10)
+ }
+	plotMA(df, main=paste(comparison_name, "-2folds",sep=""), ylim=c(-5,5));
+	if(!is.na(singleGeneToHighlight))
+	{
+		with(DESeqResults[which(rownames(DESeqResults) == singleGeneToHighlight), ], {points(baseMean, log2FoldChange, col="blue", cex=1, lwd=2);text(baseMean, log2FoldChange, labels= labelsSingleGene, pos=4, col="blue");});
+	}
+	dev.off();
+	
+	
+	cat("\t To identify the dots manually, see p 11 of the tutorial\n");
+	
+	cat("\t Plotting the MA plot with unshrunken values\n");
+	resMLE <- results(DESeqDataSet, addMLE=TRUE);
+	resMLE <- resMLE[which(resMLE[,1] != 0),];
+	resMLE <- resMLE[which(!is.na(resMLE$padj)),];
+	
+ if(output_format == "png"){
+     png(filename=paste(outputFolder, "differential_MAplot_unshrunken.png",sep=""), width = 600, height = 600, bg = "transparent");
+ }else{
+     pdf(file=paste(outputFolder, "differential_MAplot_unshrunken.pdf",sep=""), width=10, height=10)
+ }
+	plotMA(data.frame(resMLE$baseMean, resMLE$lfcMLE, resMLE$padj < 0.05), main=paste(comparison_name, ": unshrunken LFC", sep=""), ylim=c(-5, 5))
+	dev.off();
+	
+	cat("\t Plotting the counts for gene with the minimum p-value as example\n");
+ if(output_format == "png"){
+     png(filename=paste(outputFolder, "MAplot_minpvalue.png",sep=""), width = 600, height = 600, bg = "transparent");
+ }else{
+     pdf(file=paste(outputFolder, "MAplot_minpvalue.pdf",sep=""), width=10, height=10)
+ }
+	plotCounts(DESeqDataSet, gene=which.min(DESeqResults$padj)[1], intgroup="condition");
+	dev.off();
+	
+	cat("\t Plotting the relation between p-values and mean expression\n");
+ if(output_format == "png"){
+     png(filename=paste(outputFolder, "pval_vs_mean.png",sep=""), width = 600, height = 600, bg = "transparent");
+ }else{
+     pdf(file=paste(outputFolder, "pval_vs_mean.pdf",sep=""), width=10, height=10)
+ }
+	qs <- c(0, quantile(DESeqResults$baseMean[DESeqResults$baseMean > 0], 0:6/6))
+	bins <- cut(DESeqResults$baseMean, qs)
+	levels(bins) <- paste0("~",round(signif(.5*qs[-1] + .5*qs[-length(qs)],2)))
+	ratios <- tapply(DESeqResults$pvalue, bins, function(p) mean(p < .05, na.rm=TRUE))
+	barplot(ratios, xlab="mean normalized count", ylab="ratio of small p values")
+	dev.off();
+}
+
+
+################
+
+
+##############
+# MAIN
+##############
+
+
+# Retreives the parameters
+getParams(paramsDefinition);
+
+checking_outputFolder(output_folder);
+output_log <- paste(output_folder, "log_reports.txt", sep="");
+sink(output_log);
+
+
+###########
+# PART 1: Reading the data
+###########
+
+
+cat("Creating a BamFileList\n");
+bamfiles <- BamFileList(bam_files_vec);
+
+cat("Creating the genes database from biomarRt using ensembl\n");
+txdb <- makeTxDbFromGFF(refseq_anno, format="gtf");
+
+cat("Reading the csv file\n");
+samples_info <- read.csv(samples_info_file);
+rownames(samples_info) <- samples_info$Sample.name; 
+
+test_equality <- unique(unique(rownames(samples_info)) == unique(expnames_vec));
+
+if(length(test_equality) != 1 && !test_equality)
+{
+	stop("expnames_vec and rownames of sample_info should be equal\n\n");
+}
+
+
+if(length(which(grep(name_of_reference, samples_info$condition) != 0)) == 0)
+{
+	stop("\n\n The name of your reference condition is not present in the table submitted, end of the program\n\n");
+}
+
+
+cat("Making a Granges list of all exons by genes\n");
+ebg <- exonsBy(txdb, by="gene");
+#ebg <- renameSeqlevels(ebg, paste("chr", seqlevels(ebg),sep=""));
+
+#Defining the nb of cpu to use
+register(MulticoreParam(workers = nb_cpu,stop.on.error = TRUE, progressbar = TRUE));
+
+cat("Computing the read counts\n\n");
+se <- summarizeOverlaps(features=ebg, reads=bamfiles,
+		mode="Union",
+		singleEnd=single_end,
+		ignore.strand= TRUE,
+		fragments= if(single_end) FALSE else TRUE);
+
+colData(se) <- DataFrame(samples_info);
+
+
+cat("Computing the DESeq object\n");
+ddsSE <- DESeqDataSet(se, design = ~condition);
+ddsSE$condition <- relevel(ddsSE$condition, ref= name_of_reference);
+
+cat("Keeping only rows having more than 5 reads\n");
+ddsSE <- ddsSE[ rowSums(counts(ddsSE)) > 5, ];
+
+cat("Performing the differential expression analysis\n");
+ddsSE <- DESeq(ddsSE);
+notAllZero <- (rowSums(counts(ddsSE))>0);
+
+if(performBatchCorrection)
+{
+	#Correcting for batch effect and performing the diff analysis
+	cat("Correcting for batch effect and performing the diff analysis\n");
+#This code is taken from http://www.bioconductor.org/help/workflows/rnaseqGene/
+	dat <- counts(ddsSE, normalized=TRUE);
+	idx <- rowMeans(dat) > 1;
+	dat <- dat[idx,];
+	mod <- model.matrix(~ condition, colData(ddsSE));
+	mod0 <- model.matrix(~ 1, colData(ddsSE));
+	svseq <- svaseq(dat, mod, mod0, n.sv= nb_surrogate_variable);
+	
+	if(nb_surrogate_variable == 2)
+	{
+     if(output_format == "png"){
+         png(filename=paste(output_folder, "batch_effect.png",sep=""), width = 600, height = 600, bg = "transparent");
+     }else{
+         pdf(file=paste(output_folder, "batch_effect.pdf",sep=""), width=10, height=10)
+     }
+		par(mfrow=c(2,1),mar=c(3,5,3,1))
+		stripchart(svseq$sv[,1] ~ ddsSE$condition,vertical=TRUE,main="SV1")
+		abline(h=0)
+		stripchart(svseq$sv[,2] ~ ddsSE$condition,vertical=TRUE,main="SV2")
+		abline(h=0);
+		dev.off();
+	}else if(nb_surrogate_variable == 1)
+	{
+     if(output_format == "png"){
+         png(filename=paste(output_folder, "batch_effect.png",sep=""), width = 600, height = 600, bg = "transparent");
+     }else{
+         pdf(file=paste(output_folder, "batch_effect.pdf",sep=""), width=10, height=10)
+     }
+		stripchart(svseq$sv ~ ddsSE$condition,vertical=TRUE,main="SV1")
+		abline(h=0)
+		dev.off();
+	}else
+	{
+		stop("The number of surrogate variables is not handled by the script\n");
+	}
+	
+	ddssva <- ddsSE;
+	
+	if(nb_surrogate_variable == 2)
+	{
+		ddssva$SV1 <- svseq$sv[,1];
+		ddssva$SV2 <- svseq$sv[,2];
+		design(ddssva) <- ~ SV1 + SV2 + condition;
+		
+	}else{
+		
+		ddssva$SV1 <- svseq$sv
+		design(ddssva) <- ~ SV1 + condition;
+	}
+	ddssva <- DESeq(ddssva);
+}
+
+
+###########
+# PART 2: Performing the quality assessment and filtering
+###########
+
+cat("Performing quality assessment and filtering without batch effect correction\n");
+checking_outputFolder(paste(output_folder, "no_batchCorrection/", sep=""));
+qualityAssessment_and_filtering(ddsSE, paste(output_folder, "no_batchCorrection/", sep=""), notAllZero, output_format);
+
+if(performBatchCorrection)
+{
+	cat("Performing quality assessment and filtering without batch effect correction\n");
+	checking_outputFolder(paste(output_folder, "batchCorrection/", sep=""));
+	qualityAssessment_and_filtering(ddssva, paste(output_folder, "batchCorrection/", sep=""), notAllZero, output_format);
+}
+
+
+
+###########
+# PART 3: Writing result tables of the differential analysis
+###########
+		
+
+cat("Writing tables for no batch correction\n");	
+result_diff_noBatch <- writing_differential_tables(ddsSE, paste(output_folder, "no_batchCorrection/", sep=""), output_format);
+
+if(performBatchCorrection)
+{
+	cat("Writing tables for batch correction\n");
+	result_diff_Batch <- writing_differential_tables(ddssva, paste(output_folder, "batchCorrection/", sep=""), output_format);
+}
+
+
+###########
+# PART 4: Exploring the data
+###########
+
+
+cat("Performing differential plot with no batch\n");
+differential_plots(paste(output_folder, "no_batchCorrection/", sep=""), result_diff_noBatch, comparison_name, single_gene_to_highlight, labels_single_gene, ddsSE, output_format);
+
+if(performBatchCorrection)
+{
+	cat("Performing differential plot with batch\n");
+	differential_plots(paste(output_folder, "batchCorrection/", sep=""), result_diff_Batch, comparison_name, single_gene_to_highlight, labels_single_gene, ddssva, output_format);
+}
+
+
