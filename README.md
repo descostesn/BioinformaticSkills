@@ -46,7 +46,7 @@ To process data in batch, I am usually building '.conf' files containing all par
   10. Interval operations: [Centering](https://github.com/descostesn/embl-showcase/tree/master/CenterIntervals), [venn diagrams](), [union and intersection]()
   11. Clustering: [seqplots](https://github.com/descostesn/embl-showcase/tree/master/Clustering/seqplots), [deeptools](https://github.com/descostesn/embl-showcase/tree/master/Clustering/deeptools)
   12. Differential binding: [diffbind](https://github.com/descostesn/embl-showcase/tree/master/Differential/ChIP-Seq/DiffBind), [macs2diff](https://github.com/descostesn/embl-showcase/tree/master/Differential/ChIP-Seq/Macs2Diff), [MAnorm](https://github.com/descostesn/embl-showcase/tree/master/Differential/ChIP-Seq/MAnorm)
-  13. Gene Ontologies: [chipEnrich](), [clusterProfiler](), [Gage]()
+  13. Gene Ontologies: [chipEnrich](https://github.com/descostesn/embl-showcase/tree/master/GeneOntologies/ChIPEnrich), [clusterProfiler](https://github.com/descostesn/embl-showcase/tree/master/GeneOntologies/clusterProfiler), [Gage](https://github.com/descostesn/embl-showcase/tree/master/GeneOntologies/Gage)
   14. Markov model: [chromHMM](), [Model Analysis]()
   15. Motif discovery: [g-quad](), [gimmemotifs](), [meme](), [meme-chip](), [seqpattern](), [rsat]()
   16. Peak calling: [GEM](), [hiddenDomains](), [macs2](), [PeakSeq](), [SICER](), [SPP]()
