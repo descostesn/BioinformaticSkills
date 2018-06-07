@@ -48,7 +48,7 @@ To process data in batch, I am usually building '.conf' files containing all par
   12. Differential binding: [diffbind](https://github.com/descostesn/embl-showcase/tree/master/Differential/ChIP-Seq/DiffBind), [macs2diff](https://github.com/descostesn/embl-showcase/tree/master/Differential/ChIP-Seq/Macs2Diff), [MAnorm](https://github.com/descostesn/embl-showcase/tree/master/Differential/ChIP-Seq/MAnorm)
   13. Gene Ontologies: [chipEnrich](https://github.com/descostesn/embl-showcase/tree/master/GeneOntologies/ChIPEnrich), [clusterProfiler](https://github.com/descostesn/embl-showcase/tree/master/GeneOntologies/clusterProfiler), [Gage](https://github.com/descostesn/embl-showcase/tree/master/GeneOntologies/Gage)
   14. Markov model: [chromHMM](https://github.com/descostesn/embl-showcase/tree/master/MarkovModel/chromHMM), [Model Analysis](https://github.com/descostesn/embl-showcase/tree/master/MarkovModel/chromHMM_analysis)
-  15. Motif discovery: [g-quad](), [gimmemotifs](), [meme](), [meme-chip](), [seqpattern](), [rsat]()
+  15. Motif discovery: [g-quad](https://github.com/descostesn/embl-showcase/tree/master/MotifDiscovery/Gquads), [gimmemotifs](https://github.com/descostesn/embl-showcase/tree/master/MotifDiscovery/gimmemotifs), [meme](https://github.com/descostesn/embl-showcase/tree/master/MotifDiscovery/MEME), [meme-chip](https://github.com/descostesn/embl-showcase/tree/master/MotifDiscovery/MEME-Chip), [seqpattern](https://github.com/descostesn/embl-showcase/tree/master/MotifDiscovery/seqpattern-modified), [rsat]()
   16. Peak calling: [GEM](), [hiddenDomains](), [macs2](), [PeakSeq](), [SICER](), [SPP]()
   17. RNA-Seq: [DESeq2](), [edgeR](), [maSigPro](), [TCSeq](), [DEXSeq](), [clustering](), [Tissue specificity]()
 
