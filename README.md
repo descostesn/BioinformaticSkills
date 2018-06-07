@@ -41,13 +41,15 @@ To process data in batch, I am usually building '.conf' files containing all par
   5. Bam operations: [ALL](), [bamutils](), [samtools](), [picardtools]() 
   6. Pasha Pipeline (published in Bioinformatics journal: [here]())
   7. Format conversion (not exhaustive): [sratoolkit](), [bedtools](), [samtools](), [bedops](), [bed2GFF](), [wigVar2Fix]()
-  8. Visualization: [Boxplots](),[UCSC tracks](), [linear regression](), [correlation](), [MAPlot]()
+  8. Visualization: [Boxplots](),[UCSC tracks](), [linear regression](), [correlation](), [MAPlot](), [PCA](), [profiles]()
   9. Interval operations: [Centering](), [venn diagrams](), [union and intersection]()
   10. Clustering: [seqplots](), [deeptools]()
   11. Differential binding: [diffbind](), [macs2diff](), [MAnorm]()
   12. Gene Ontologies: [chipEnrich](), [clusterProfiler](), [Gage]()
   13. Markov model: [chromHMM](), [Model Analysis]()
-  14. Motif discovery: [g-quad](), [gimmemotifs](), [meme](), [meme-chip](), [seqpattern]()
+  14. Motif discovery: [g-quad](), [gimmemotifs](), [meme](), [meme-chip](), [seqpattern](), [rsat]()
+  15. Peak calling: [GEM](), [hiddenDomains](), [macs2](), [PeakSeq](), [SICER](), [SPP]()
+  16: RNA-Seq: [DESeq2](), [edgeR](), [maSigPro](), [TCSeq](), [DEXSeq](), [clustering](), [Tissue specificity]()
 
 ## Java interface for Biologists
 
