@@ -1,0 +1,14 @@
+#qsub 
+# -cwd
+# -t 1-
+# -pe threaded 1-20
+# -l mem_free=10G,h_vmem=10G,mem_token=10G
+# -N Meme-chip
+# -M nicolas.descostes@nyumc.org
+# -m a
+# -b y 
+# ./meme-chip.sh ozgur_meme-chip_longmotifs-newFiles.conf
+
+
+qsub -cwd -t 1-4 -pe openmpi 1-20 -l mem_free=10G,h_vmem=10G,mem_token=10G -N Meme-chip_ozgur -M nicolas.descostes@nyumc.org -m a -b y ./meme-chip.sh ozgur_meme-chip_longmotifs-newFiles.conf
+ 
