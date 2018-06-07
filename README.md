@@ -49,7 +49,7 @@ To process data in batch, I am usually building '.conf' files containing all par
   13. Markov model: [chromHMM](), [Model Analysis]()
   14. Motif discovery: [g-quad](), [gimmemotifs](), [meme](), [meme-chip](), [seqpattern](), [rsat]()
   15. Peak calling: [GEM](), [hiddenDomains](), [macs2](), [PeakSeq](), [SICER](), [SPP]()
-  16: RNA-Seq: [DESeq2](), [edgeR](), [maSigPro](), [TCSeq](), [DEXSeq](), [clustering](), [Tissue specificity]()
+  16. RNA-Seq: [DESeq2](), [edgeR](), [maSigPro](), [TCSeq](), [DEXSeq](), [clustering](), [Tissue specificity]()
 
 ## Java interface for Biologists
 
