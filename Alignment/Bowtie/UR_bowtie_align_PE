@@ -1,0 +1,73 @@
+#!/bin/bash
+if [ $# -ne 8 ]       # If the number of parameter is not 7, display the help
+then    
+	echo "ERROR : Bad number of arguments" 2>&1 
+	echo "Align reads provided in fasta/fastq file on chosen genome using bowtie."
+	echo "Uni-read are reported in the output file. Multi-reads can be exported to file too."
+    echo "Usage: "
+    echo "  UR_bowtie_align <file_name1> <file_name2> <species> <threads> <mismatch> <reportMR> <reportUN> <bowtie_index_path>"
+    echo "    <file_name1>    		= name of the fasta/fastq file (with its extension)"
+    echo "    <file_name2>    		= name of the fasta/fastq file (with its extension)"
+    echo "    <species>      		= name of the species to use : mm8, hg18,..."
+    echo "    <thread>       		= number of processor to use. Standard value is 10 (-p option)"
+    echo "    <mismatch>     		= accepted level of mismatch. Standard value is 2 (-v option)"
+    echo "    <reportMR>     		= 'true' if you want bowtie to export a file containing the multi-reads. 'false' is you don't want."
+    echo "    <reportUN>     		= 'true' if you want bowtie to export a file containing the unaligned reads. 'false' is you don't want."
+    echo "	  <bowtie_index_path>	= Path to the ebwt files which stand for the bowtie index." 
+    echo ""
+    echo " Note for expert : the '-m 1 -k 1 --best --seed 1' options are used to select only the read with a single alignment."
+    exit 1
+fi
+
+# Retrieve the file extension
+EXTENSION=$(echo $1 |awk -F . '{if (NF>1) {print $NF}}')
+BASENAME=$(echo $1 |sed s/."$EXTENSION"//)
+
+# Test the file extension to set the right option
+if [ "$EXTENSION" = "fastq" ]
+then
+	FORMAT=q
+elif [ "$EXTENSION" = "fasta" ]
+then
+	FORMAT=f
+elif [ "$EXTENSION" = "csfasta" ]
+then
+	FORMAT=f
+else
+	echo " ERROR : File extension is not correct. It should be either 'fastq', 'fasta' or 'csfasta'" >&2
+	exit 1
+fi
+
+
+
+# Launch the right command
+if [ -f $1 ]
+then
+	SUFFIX="bwalign"
+	echo "Launching alignment..."
+	if [ "$6" = "true" ]
+	then
+		if [ "$7" = "true" ]
+		then
+			echo "multi and unaligned"
+			bowtie -$FORMAT -v $5 -p $4 -m 1 -k 1 -X 10000 --best --sam --seed 1 $8 -1 "$1" -2 "$2" --un `echo "$1" | sed s/."$EXTENSION"//`_"$SUFFIX"_"$3"_v"$5"_m1_k1_UN.sam --max `echo "$1" | sed s/."$EXTENSION"//`_"$SUFFIX"_"$3"_v"$5"_m1_k1_MR.$EXTENSION  `echo "$1" | sed s/."$EXTENSION"//`_"$SUFFIX"_"$3"_v"$5"_m1_k1.sam > `echo "$1" | sed s/."$EXTENSION"//`_"$SUFFIX"_"$3"_v"$5"_m1_k1_LOG_ALIGNMENT.txt 2>&1 > `echo "$1" | sed s/."$EXTENSION"//`_"$SUFFIX"_"$3"_v"$5"_m1_k1_TREATED_FILES.txt
+		else
+			echo "only multi"
+			bowtie -$FORMAT -v $5 -p $4 -m 1 -k 1 -X 10000 --best --sam --seed 1 $8 -1 "$1" -2 "$2" --max `echo "$1" | sed s/."$EXTENSION"//`_"$SUFFIX"_"$3"_v"$5"_m1_k1_MR.$EXTENSION `echo "$1" | sed s/."$EXTENSION"//`_"$SUFFIX"_"$3"_v"$5"_m1_k1.sam > `echo "$1" | sed s/."$EXTENSION"//`_"$SUFFIX"_"$3"_v"$5"_m1_k1_LOG_ALIGNMENT.txt 2>&1 > `echo "$1" | sed s/."$EXTENSION"//`_"$SUFFIX"_"$3"_v"$5"_m1_k1_TREATED_FILES.txt
+		fi
+	else
+		if [ "$7" = "true" ]
+		then
+			echo "only unaligned"
+			bowtie -$FORMAT -v $5 -p $4 -m 1 -k 1 -X 10000 --best --sam --seed 1 $8 -1 "$1" -2 "$2" --un `echo "$1" | sed s/."$EXTENSION"//`_"$SUFFIX"_"$3"_v"$5"_m1_k1_UN.sam `echo "$1" | sed s/."$EXTENSION"//`_"$SUFFIX"_"$3"_v"$5"_m1_k1.sam > `echo "$1" | sed s/."$EXTENSION"//`_"$SUFFIX"_"$3"_v"$5"_m1_k1_LOG_ALIGNMENT.txt 2>&1 > `echo "$1" | sed s/."$EXTENSION"//`_"$SUFFIX"_"$3"_v"$5"_m1_k1_TREATED_FILES.txt
+		else
+			echo "neither unaligned or multi"
+			bowtie -$FORMAT -v $5 -p $4 -m 1 -k 1 -X 10000 --best --sam --seed 1 $8 -1 "$1" -2 "$2" `echo "$1" | sed s/."$EXTENSION"//`_"$SUFFIX"_"$3"_v"$5"_m1_k1.sam > `echo "$1" | sed s/."$EXTENSION"//`_"$SUFFIX"_"$3"_v"$5"_m1_k1_LOG_ALIGNMENT.txt 2>&1 > `echo "$1" | sed s/."$EXTENSION"//`_"$SUFFIX"_"$3"_v"$5"_m1_k1_TREATED_FILES.txt
+		fi		
+	fi
+else
+	echo " ERROR : File does not exist" >&2
+	exit 1
+fi
+
+exit 0     
