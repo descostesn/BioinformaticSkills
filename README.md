@@ -1,4 +1,4 @@
-# EMBL-showcase
+# EMBL-Showcase
 
 ## Introduction
 
@@ -32,7 +32,7 @@ To process data in batch, I am usually building '.conf' files containing all par
 
 ## Sequencing data processing and analysis
 
-Click on the process that you are interested in to see the code:
+**Click on the process that you are interested in to see the code:**
 
   1. **For the latest and most representative code:** [ChipSeqSpike development]()
   2. Demultiplexing and trimming: with [BB](), [Illumina primers](), [VLB](), [cutadapt]()
