@@ -53,4 +53,4 @@ To process data in batch, I am usually building '.conf' files containing all par
 
 ## Java interface for Biologists
 
-[Genomic Box]()
+[Genomic Box](https://github.com/descostesn/embl-showcase/tree/master/JavaGUIForBiologists)
