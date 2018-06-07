@@ -23,10 +23,12 @@ I am making use of R and Bioconductor extensively. All my scripts are structured
   3. A functions section
   4. A main section
 
-To process data in batch, I am usually building '.conf' files containing all parameters separated by semicolons (see [code generation repository]()). To feed script with parameters, I am using perl scripts that call R script through the `system(Rscript path*.R)` command. The perl script itself is called by a bash script defining hpc parameters. This latter is qsub to the grid:
+To process data in batch, I am usually building '.conf' files containing all parameters separated by semicolons (see [code generation repository]()). To feed script with parameters, I am using perl scripts that call R script through the `system(Rscript path*.R)` command. The perl script itself is called by a bash script defining hpc parameters. This latter is qsub to the grid. In summary, my data treatments are organized as follows:
 
   1. Bash defining job scheduler parameters taking a *.conf* file as input
   2. Perl script formating parameters and calling the *processing* script
   3. Processing script
 
+
+## Sequencing data processing and analysis
 
