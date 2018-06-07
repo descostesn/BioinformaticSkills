@@ -10,7 +10,7 @@ This repository aims at explaining how my work is organized and to provide a lis
 ## General Overview
 
 ### System spec
-<p style="text-align: justify;"> All the code has been developed on a local computer under Ubuntu operating system. I use Eclipse Oxygen 3a Release 4.7.3a committing with Egit to Github. I make use of specific perspectives (StatET, Perl, Java, Bash) in Eclipse to optimize development and I am using code templates as well to increase my productivity.</p>
+<p style='text-align: justify;'> All the code has been developed on a local computer under Ubuntu operating system. I use Eclipse Oxygen 3a Release 4.7.3a committing with Egit to Github. I make use of specific perspectives (StatET, Perl, Java, Bash) in Eclipse to optimize development and I am using code templates as well to increase my productivity.</p>
 The HPC system used (via scp, ssh) is [Phoenix](https://genome.med.nyu.edu/hpcf/wiki/Manual:Cluster_User_Guide#Foreword), CentOS release 6, that makes use of SGE. It is composed of 2 head nodes and 70 compute nodes. 7 are equipped with a total of 21 GPUs, and one is a high-memory node (1 TB of RAM).</p>
 
 ### Code and Jobs
@@ -22,4 +22,4 @@ I am making use of R and Bioconductor extensively. All my scripts are structured
   3. A functions section
   4. A main section
 
-To process data in batch, I am usually building '.conf' files containing all parameters separated by semicolons (see [code generation repository]()). To feed script with parameters, I am using perl scripts that call R script through the `system(Rscript path*.R)` command.
+<p style='text-align: justify;'> To process data in batch, I am usually building '.conf' files containing all parameters separated by semicolons (see [code generation repository]()). To feed script with parameters, I am using perl scripts that call R script through the `system(Rscript path*.R)` command.</p>
