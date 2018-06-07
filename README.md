@@ -43,7 +43,7 @@ To process data in batch, I am usually building '.conf' files containing all par
   7. Pasha Pipeline (published in Bioinformatics journal: [here](https://github.com/descostesn/embl-showcase/tree/master/Pasha))
   8. Format conversion (not exhaustive): [sratoolkit](https://github.com/descostesn/embl-showcase/tree/master/FormatConversion/sratoolkit), [bedtools](), [samtools](), [bedops](), [bed2GFF](), [wigVar2Fix]()
   9. Visualization: [Boxplots](https://github.com/descostesn/embl-showcase/tree/master/Visualization/Boxplots),[UCSC tracks](), [linear regression](), [correlation](), [MAPlot](), [PCA](), [profiles]()
-  10. Interval operations: [Centering](), [venn diagrams](), [union and intersection]()
+  10. Interval operations: [Centering](https://github.com/descostesn/embl-showcase/tree/master/CenterIntervals), [venn diagrams](), [union and intersection]()
   11. Clustering: [seqplots](), [deeptools]()
   12. Differential binding: [diffbind](), [macs2diff](), [MAnorm]()
   13. Gene Ontologies: [chipEnrich](), [clusterProfiler](), [Gage]()
