@@ -40,7 +40,7 @@ To process data in batch, I am usually building '.conf' files containing all par
   4. QC control and filtering: [fastqc](https://github.com/descostesn/embl-showcase/tree/master/QualityControlFiltering), [NGSQCToolkit](https://github.com/descostesn/embl-showcase/tree/master/QualityControlFiltering), 
   5. Alignment: [Bowtie](https://github.com/descostesn/embl-showcase/tree/master/Alignment/Bowtie), [Bowtie2](https://github.com/descostesn/embl-showcase/tree/master/Alignment/Bowtie2), [STAR](https://github.com/descostesn/embl-showcase/tree/master/Alignment/STAR), [Tophat](https://github.com/descostesn/embl-showcase/tree/master/Alignment/Tophat)
   6. Bam operations: [ALL](https://github.com/descostesn/embl-showcase/tree/master/BamOperations), [bamutils](https://github.com/descostesn/embl-showcase/tree/master/BamOperations/bamutils), [samtools](https://github.com/descostesn/embl-showcase/tree/master/BamOperations/samtools), [picardtools](https://github.com/descostesn/embl-showcase/tree/master/BamOperations/picardtools) 
-  7. Pasha Pipeline (published in Bioinformatics journal: [here]())
+  7. Pasha Pipeline (published in Bioinformatics journal: [here](https://github.com/descostesn/embl-showcase/tree/master/Pasha))
   8. Format conversion (not exhaustive): [sratoolkit](), [bedtools](), [samtools](), [bedops](), [bed2GFF](), [wigVar2Fix]()
   9. Visualization: [Boxplots](),[UCSC tracks](), [linear regression](), [correlation](), [MAPlot](), [PCA](), [profiles]()
   10. Interval operations: [Centering](), [venn diagrams](), [union and intersection]()
