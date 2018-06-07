@@ -45,7 +45,7 @@ To process data in batch, I am usually building '.conf' files containing all par
   9. Visualization: [Boxplots](https://github.com/descostesn/embl-showcase/tree/master/Visualization/Boxplots),[UCSC tracks](), [linear regression](), [correlation](), [MAPlot](), [PCA](), [profiles]()
   10. Interval operations: [Centering](https://github.com/descostesn/embl-showcase/tree/master/CenterIntervals), [venn diagrams](), [union and intersection]()
   11. Clustering: [seqplots](https://github.com/descostesn/embl-showcase/tree/master/Clustering/seqplots), [deeptools](https://github.com/descostesn/embl-showcase/tree/master/Clustering/deeptools)
-  12. Differential binding: [diffbind](), [macs2diff](), [MAnorm]()
+  12. Differential binding: [diffbind](https://github.com/descostesn/embl-showcase/tree/master/Differential/ChIP-Seq/DiffBind), [macs2diff](), [MAnorm]()
   13. Gene Ontologies: [chipEnrich](), [clusterProfiler](), [Gage]()
   14. Markov model: [chromHMM](), [Model Analysis]()
   15. Motif discovery: [g-quad](), [gimmemotifs](), [meme](), [meme-chip](), [seqpattern](), [rsat]()
