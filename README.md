@@ -42,7 +42,7 @@ To process data in batch, I am usually building '.conf' files containing all par
   6. Bam operations: [ALL](https://github.com/descostesn/embl-showcase/tree/master/BamOperations), [bamutils](https://github.com/descostesn/embl-showcase/tree/master/BamOperations/bamutils), [samtools](https://github.com/descostesn/embl-showcase/tree/master/BamOperations/samtools), [picardtools](https://github.com/descostesn/embl-showcase/tree/master/BamOperations/picardtools) 
   7. Pasha Pipeline (published in Bioinformatics journal: [here](https://github.com/descostesn/embl-showcase/tree/master/Pasha))
   8. Format conversion (not exhaustive): [sratoolkit](https://github.com/descostesn/embl-showcase/tree/master/FormatConversion/sratoolkit), [bedtools](), [samtools](), [bedops](), [bed2GFF](), [wigVar2Fix]()
-  9. Visualization: [Boxplots](),[UCSC tracks](), [linear regression](), [correlation](), [MAPlot](), [PCA](), [profiles]()
+  9. Visualization: [Boxplots](https://github.com/descostesn/embl-showcase/tree/master/Visualization/Boxplots),[UCSC tracks](), [linear regression](), [correlation](), [MAPlot](), [PCA](), [profiles]()
   10. Interval operations: [Centering](), [venn diagrams](), [union and intersection]()
   11. Clustering: [seqplots](), [deeptools]()
   12. Differential binding: [diffbind](), [macs2diff](), [MAnorm]()
