@@ -18,7 +18,7 @@ The **HPC** system used (via scp, ssh) is [Phoenix](https://genome.med.nyu.edu/h
 
 I am making use of R and Bioconductor extensively. Most of my scripts are structured in the following manner:
 
-  1. A brief description and the date (MM/YYYY) of development. 
+  1. A brief description and the date (MM/YYYY) of development
   2. A parameter section with a description of each argument used
   3. A functions section
   4. A main section
