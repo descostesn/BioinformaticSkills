@@ -16,7 +16,7 @@ The **HPC** system used (via scp, ssh) is [Phoenix](https://genome.med.nyu.edu/h
 
 ### Code and Jobs
 
-I am making use of R and Bioconductor extensively. All my scripts are structured in the following manner:
+I am making use of R and Bioconductor extensively. Most of my scripts are structured in the following manner:
 
   1. A brief description and the date (MM/YYYY) of development. 
   2. A parameter section with a description of each argument used
