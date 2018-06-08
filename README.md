@@ -3,7 +3,7 @@
 ## Introduction
 
 
-This repository aims at explaining how my work is organized and to provide a list of tools that I use for analyzing sequencing data.
+This repository aims at explaining how my work is organized and to provide a list of tools that I use for analyzing sequencing data. By clicking names, one can visualize the corresponding code.
 
 The folder 'bioconductor-development' provides the current code under development for [ChIPSeqSpike](https://www.bioconductor.org/packages/devel/bioc/html/ChIPSeqSpike.html). This [code](https://github.com/descostesn/embl-showcase/tree/master/ChIPSeqSpike_dev) is the most up-to-date in terms of my R knowledge. Other scripts provided are often developed for internal use and do not intend to use the optimal solutions necessarily. As an embeded bioinformatician, I always try to find the best compromise between code optimization and time of development.
 
