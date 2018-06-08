@@ -1,4 +1,4 @@
-# EMBL-Showcase
+# Skills in Bioinformatics
 
 ## Introduction
 
