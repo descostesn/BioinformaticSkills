@@ -11,7 +11,7 @@ The folder [ChIPSeqSpike_dev](https://github.com/descostesn/embl-showcase/tree/m
 
 ### System spec
 
-All code has been developed on a local computer under **Ubuntu operating system**. I use **Eclipse** Oxygen 3a Release 4.7.3a committing with **Egit** to **Github**. I make use of specific perspectives (StatET, Perl, Java, Bash) in Eclipse to **optimize development** and I am using code templates as well to increase my productivity.</p>
+All codes were developed on a local computer under **Ubuntu operating system**. I use **Eclipse** Oxygen 3a Release 4.7.3a committing with **Egit** to **Github**. I make use of specific perspectives (StatET, Perl, Java, Bash) in Eclipse to **optimize development** and I am using code templates as well to increase my productivity.</p>
 The **HPC** system used (via scp, ssh) is [Phoenix](https://genome.med.nyu.edu/hpcf/wiki/Manual:Cluster_User_Guide#Foreword), CentOS release 6, that makes use of **SGE**. It is composed of 2 head nodes and 70 compute nodes. 7 are equipped with a total of 21 GPUs, and one is a high-memory node (1 TB of RAM).
 
 ### Code and Jobs
