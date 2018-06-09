@@ -54,4 +54,4 @@ To process data in batch, I am usually building '.conf' files containing all par
 
 ## Java interface for Biologists
 
-This idea of providing very simple interfaces started with [this project](https://github.com/descostesn/ChIPSeqRNASeqGUI). I am currently developing a more complete interface [Genomic Box](https://github.com/descostesn/embl-showcase/tree/master/JavaGUIForBiologists).
+This idea of providing very simple interfaces started with [this project](https://github.com/descostesn/ChIPSeqRNASeqGUI). I am currently developing a more complete interface [GenomicBox](https://github.com/descostesn/GenomicBoxGUI).
